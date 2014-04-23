@@ -6,13 +6,14 @@ import (
 )
 
 // Return a stream of values that rise from 0 to 1, 'frequency' times per second.
-func (ctx Context) WaveInput(frequency float64) (stream chan float64) {
+// Phase is in the range [0, 2pi)
+func (ctx Context) WaveInput(frequency float64, phase float64) (stream chan float64) {
 	stream = make(chan float64, ctx.StreamBufferSize)
 	
 	incr := frequency / ctx.SampleRate
 	
 	go func() {
-		var x float64
+		x := phase / (math.Pi * 2)
 		
 		for {
 			stream <- x
@@ -27,10 +28,10 @@ func (ctx Context) WaveInput(frequency float64) (stream chan float64) {
 }
 
 // Returns a sine wave at a given frequency.
-func (ctx Context) Sine(frequency float64) (output chan float64) {
+func (ctx Context) SineWithPhase(frequency float64, phase float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
-	input := ctx.WaveInput(frequency)
+	input := ctx.WaveInput(frequency, phase)
 	
 	go func() {
 		for x := range input {
@@ -41,11 +42,15 @@ func (ctx Context) Sine(frequency float64) (output chan float64) {
 	return output
 }
 
+func (ctx Context) Sine(frequency float64) (output chan float64) {
+	return ctx.SineWithPhase(frequency, 0.0)
+}
+
 // Returns a saw wave at a given frequency.
-func (ctx Context) Saw(frequency float64) (output chan float64) {
+func (ctx Context) SawWithPhase(frequency float64, phase float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
-	input := ctx.WaveInput(frequency)
+	input := ctx.WaveInput(frequency, phase)
 	
 	go func() {
 		for x := range input {
@@ -56,11 +61,15 @@ func (ctx Context) Saw(frequency float64) (output chan float64) {
 	return output
 }
 
+func (ctx Context) Saw(frequency float64) (output chan float64) {
+	return ctx.SineWithPhase(frequency, 0.0)
+}
+
 // Returns a square wave at a given frequency.
-func (ctx Context) Square(frequency float64) (output chan float64) {
+func (ctx Context) SquareWithPhase(frequency float64, phase float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
-	input := ctx.WaveInput(frequency)
+	input := ctx.WaveInput(frequency, phase)
 	
 	go func() {
 		for x := range input {
@@ -74,6 +83,10 @@ func (ctx Context) Square(frequency float64) (output chan float64) {
 	}()
 	
 	return output
+}
+
+func (ctx Context) Square(frequency float64) (output chan float64) {
+	return ctx.SineWithPhase(frequency, 0.0)
 }
 
 func (ctx Context) Silence() (output chan float64) {
