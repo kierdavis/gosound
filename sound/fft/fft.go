@@ -38,8 +38,13 @@ func fft(output []complex128, input []float64, stride int) {
 		return
 	}
 	
+	var oddInput []float64
+	if len(input) > stride {
+		oddInput = input[stride:]
+	}
+	
 	fft(output[:p], input, stride * 2)
-	fft(output[p:], input[stride:], stride * 2)
+	fft(output[p:], oddInput, stride * 2)
 	
 	for k, t := range output[:p] {
 		a := complex(0, -2 * math.Pi * float64(k) / float64(n))
