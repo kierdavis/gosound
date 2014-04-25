@@ -29,6 +29,10 @@ func (ctx Context) Mix(inputs ...chan float64) (output chan float64) {
 	return output
 }
 
+func (ctx Context) MixNormalised(inputs ...chan float64) (output chan float64) {
+	return ctx.Scale(ctx.Mix(inputs...), 1 / float64(len(inputs)))
+}
+
 func (ctx Context) Append(inputs ...chan float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
@@ -93,6 +97,16 @@ func (ctx Context) Drop(input chan float64, length time.Duration, waitForZeroCro
 	before, after := ctx.SplitAt(input, length, waitForZeroCrossing)
 	ctx.Drain(before)
 	return after
+}
+
+func (ctx Context) ToBuffer(input chan float64) (buffer []float64) {
+	buffer = make([]float64, 0, ctx.StreamBufferSize)
+	
+	for x := range input {
+		buffer = append(buffer, x)
+	}
+	
+	return buffer
 }
 
 func (ctx Context) Offset(input chan float64, offset float64) (output chan float64) {
