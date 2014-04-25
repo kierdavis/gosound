@@ -62,7 +62,7 @@ func (ctx Context) SawWithPhase(frequency float64, phase float64) (output chan f
 }
 
 func (ctx Context) Saw(frequency float64) (output chan float64) {
-	return ctx.SineWithPhase(frequency, 0.0)
+	return ctx.SawWithPhase(frequency, 0.0)
 }
 
 // Returns a square wave at a given frequency.
@@ -86,7 +86,7 @@ func (ctx Context) SquareWithPhase(frequency float64, phase float64) (output cha
 }
 
 func (ctx Context) Square(frequency float64) (output chan float64) {
-	return ctx.SineWithPhase(frequency, 0.0)
+	return ctx.SquareWithPhase(frequency, 0.0)
 }
 
 func (ctx Context) Silence() (output chan float64) {
