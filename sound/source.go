@@ -50,7 +50,8 @@ func (ctx Context) Sine(frequency float64) (output chan float64) {
 func (ctx Context) SawWithPhase(frequency float64, phase float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
-	input := ctx.WaveInput(frequency, phase)
+	// Add pi to phase so that the output it starts at 0
+	input := ctx.WaveInput(frequency, phase + math.Pi)
 	
 	go func() {
 		for x := range input {
@@ -65,6 +66,30 @@ func (ctx Context) Saw(frequency float64) (output chan float64) {
 	return ctx.SawWithPhase(frequency, 0.0)
 }
 
+// Returns a triangle wave at a given frequency.
+func (ctx Context) TriangleWithPhase(frequency float64, phase float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	// Add pi/2 to phase so that the output it starts at 0
+	input := ctx.WaveInput(frequency, phase + math.Pi/2)
+	
+	go func() {
+		for x := range input {
+			output <- 1 - math.Abs(x*2 - 1)*2
+		}
+	}()
+	
+	return output
+}
+
+func (ctx Context) Triangle(frequency float64) (output chan float64) {
+	return ctx.TriangleWithPhase(frequency, 0.0)
+}
+
+func signum(x float64) float64 {
+	return x / math.Abs(x)
+}
+
 // Returns a square wave at a given frequency.
 func (ctx Context) SquareWithPhase(frequency float64, phase float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
@@ -73,12 +98,7 @@ func (ctx Context) SquareWithPhase(frequency float64, phase float64) (output cha
 	
 	go func() {
 		for x := range input {
-			// dear God I hope this conditional is optimised away...
-			if x >= 0.5 {
-				output <- 1.0
-			} else {
-				output <- -1.0
-			}
+			output <- signum(x - 0.5)
 		}
 	}()
 	
