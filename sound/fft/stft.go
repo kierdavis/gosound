@@ -5,13 +5,11 @@ import (
 )
 
 // Rolling short-time Fourier transform over an input channel.
-func STFT(input chan float64, window []float64, overlapSize int, canReuseResult bool) (output chan []float64) {
+func STFT(input chan float64, window []float64, overlapSize int) (output chan []float64) {
 	output = make(chan []float64)
 	
 	go func() {
 		defer close(output)
-		
-		var result []float64
 		
 		windowSize := len(window)
 		buffer := make([]float64, windowSize)
@@ -42,9 +40,7 @@ func STFT(input chan float64, window []float64, overlapSize int, canReuseResult 
 			cresult := FFT(buffer)
 			
 			// Find the squared magnitudes and put them into a result array.
-			if result == nil {
-				result = make([]float64, len(cresult))
-			}
+			result := make([]float64, len(cresult))
 			for i, c := range cresult {
 				x, y := real(c), imag(c)
 				result[i] = x*x + y*y
@@ -52,11 +48,6 @@ func STFT(input chan float64, window []float64, overlapSize int, canReuseResult 
 			
 			// Send the result
 			output <- result
-			
-			// If we can't reuse the result array, set it to nil.
-			if !canReuseResult {
-				result = nil
-			}
 			
 			// Copy the overlap to the start of the buffer.
 			copy(buffer, overlap)
