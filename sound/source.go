@@ -5,6 +5,75 @@ import (
 	"math/rand"
 )
 
+func (ctx Context) Saw(frequency float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	incr := (frequency / ctx.SampleRate) / 2.0
+	
+	go func() {
+		x := 0.0
+		
+		for {
+			output <- x
+			x += incr
+			if x >= 1.0 {
+				x -= 2.0
+			}
+		}
+	}()
+	
+	return output
+}
+
+func (ctx Context) Triangle(frequency float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	input := ctx.Saw(frequency)
+	
+	go func() {
+		for x := range input {
+			output <- math.Abs(x)
+		}
+	}()
+	
+	return output
+}
+
+func (ctx Context) Square(frequency float64, duty float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	duty = (duty - 0.5) * 2 // Range [0..1] -> [-1..1]
+	
+	input := ctx.Saw(frequency)
+	
+	go func() {
+		for x := range input {
+			if x < duty {
+				output <- 1.0
+			} else {
+				output <- -1.0
+			}
+		}
+	}()
+	
+	return output
+}
+
+func (ctx Context) Sine(frequency float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	input := ctx.Saw(frequency)
+	
+	go func() {
+		for x := range input {
+			output <- math.Sin(x * math.Pi)
+		}
+	}()
+	
+	return output
+}
+
+/*
 // Return a stream of values that rise from 0 to 1, 'frequency' times per second.
 // Phase is in the range [0, 2pi)
 func (ctx Context) WaveInput(frequency float64, phase float64) (stream chan float64) {
@@ -108,6 +177,7 @@ func (ctx Context) SquareWithPhase(frequency float64, phase float64) (output cha
 func (ctx Context) Square(frequency float64) (output chan float64) {
 	return ctx.SquareWithPhase(frequency, 0.0)
 }
+*/
 
 func (ctx Context) Silence() (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
