@@ -8,17 +8,14 @@ import (
 func (ctx Context) Saw(frequency float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
-	incr := (frequency / ctx.SampleRate) / 2.0
+	incr := frequency / ctx.SampleRate
 	
 	go func() {
 		x := 0.0
 		
 		for {
-			output <- x
-			x += incr
-			if x >= 1.0 {
-				x -= 2.0
-			}
+			output <- (x * 2.0) - 1.0
+			_, x = math.Modf(x + incr)
 		}
 	}()
 	
