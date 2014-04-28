@@ -109,6 +109,31 @@ func (ctx Context) ToBuffer(input chan float64) (buffer []float64) {
 	return buffer
 }
 
+func (ctx Context) Loop(input chan float64, times int) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	go func() {
+		defer close(output)
+		
+		if times < 0 {
+			for {
+				for x := range input {
+					output <- x
+				}
+			}
+		} else {
+			for times > 0 {
+				for x := range input {
+					output <- x
+				}
+				times--
+			}
+		}
+	}()
+	
+	return output
+}
+
 func (ctx Context) Offset(input chan float64, offset float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
 	
