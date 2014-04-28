@@ -17,7 +17,7 @@ import (
 //       time.Second / 2    // Release time
 //       0.0,               // End level
 //     )
-// Will panic of args are not of the correct types (alternative float64 and time.Duration).
+// Will panic of args are not of the correct types (alternating float64 and time.Duration).
 func (ctx Context) LinearEnvelope(args ...interface{}) (output chan float64) {
 	if len(args) % 2 != 1 {
 		panic("Bad number of arguments")
