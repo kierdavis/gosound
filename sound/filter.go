@@ -5,137 +5,95 @@ import (
 )
 
 // Convert a high pass filter's cutoff frequency to an alpha value
-func (ctx Context) HighPassCutoffToAlpha(freq float64) (alpha float64) {
+func (ctx Context) HighPassCutoffToAlpha(frequency float64) (alpha float64) {
 	// Time interval between samples
 	dt := 1 / ctx.SampleRate
 	
 	// Time constant (of analogue circuit)
-	rc := 1 / (2 * math.Pi * freq)
+	rc := 1 / (2 * math.Pi * frequency)
 	
 	return rc / (rc + dt)
 }
 
-func (ctx Context) HighPassCutoffToAlphaM(freqs chan float64) (alphas chan float64) {
-	alphas = make(chan float64, ctx.StreamBufferSize)
+func (ctx Context) HighPassCutoffsToAlphas(frequencyInput chan float64) (alphaOutput chan float64) {
+	alphaOutput = make(chan float64, ctx.StreamBufferSize)
 	
 	go func() {
-		defer close(alphas)
+		defer close(alphaOutput)
 		
-		for freq := range freqs {
-			alphas <- ctx.HighPassCutoffToAlpha(freq)
+		for frequency := range frequencyInput {
+			alphaOutput <- ctx.HighPassCutoffToAlpha(frequency)
 		}
 	}()
 	
-	return alphas
+	return alphaOutput
 }
 
-func (ctx Context) HighPass(input chan float64, alpha float64) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
+func (ctx Context) HighPass(signalInput chan float64, alphaInput chan float64) (signalOutput chan float64) {
+	signalOutput = make(chan float64, ctx.StreamBufferSize)
 	
 	go func() {
-		defer close(output)
+		defer close(signalOutput)
 		
-		lastX := <-input
+		lastX := <-signalInput
 		lastY := lastX
-		output <- lastY
+		signalOutput <- lastY
 		
-		for x := range input {
+		for x := range signalInput {
+			alpha := <-alphaInput
 			y := alpha * (lastY + x - lastX)
-			output <- y
+			signalOutput <- y
 			
 			lastX = x
 			lastY = y
 		}
 	}()
 	
-	return output
-}
-
-func (ctx Context) HighPassM(input chan float64, alphaModulation chan float64) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
-	
-	go func() {
-		defer close(output)
-		
-		lastX := <-input
-		lastY := lastX
-		output <- lastY
-		
-		for x := range input {
-			alpha := <-alphaModulation
-			y := alpha * (lastY + x - lastX)
-			output <- y
-			
-			lastX = x
-			lastY = y
-		}
-	}()
-	
-	return output
+	return signalOutput
 }
 
 // Convert a low pass filter's cutoff frequency to an alpha value
-func (ctx Context) LowPassCutoffToAlpha(freq float64) (alpha float64) {
+func (ctx Context) LowPassCutoffToAlpha(frequency float64) (alpha float64) {
 	// Time interval between samples
 	dt := 1 / ctx.SampleRate
 	
 	// Time constant (of analogue circuit)
-	rc := 1 / (2 * math.Pi * freq)
+	rc := 1 / (2 * math.Pi * frequency)
 	
 	return dt / (rc + dt)
 }
 
-func (ctx Context) LowPassCutoffToAlphaM(freqs chan float64) (alphas chan float64) {
-	alphas = make(chan float64, ctx.StreamBufferSize)
+func (ctx Context) LowPassCutoffsToAlphas(frequencyInput chan float64) (alphaOutput chan float64) {
+	alphaOutput = make(chan float64, ctx.StreamBufferSize)
 	
 	go func() {
-		defer close(alphas)
+		defer close(alphaOutput)
 		
-		for freq := range freqs {
-			alphas <- ctx.LowPassCutoffToAlpha(freq)
+		for frequency := range frequencyInput {
+			alphaOutput <- ctx.LowPassCutoffToAlpha(frequency)
 		}
 	}()
 	
-	return alphas
+	return alphaOutput
 }
 
-func (ctx Context) LowPass(input chan float64, alpha float64) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
+func (ctx Context) LowPass(signalInput chan float64, alphaInput chan float64) (signalOutput chan float64) {
+	signalOutput = make(chan float64, ctx.StreamBufferSize)
 	
 	go func() {
-		defer close(output)
+		defer close(signalOutput)
 		
-		lastY := <-input
-		output <- lastY
+		lastY := <-signalInput
+		signalOutput <- lastY
 		
-		for x := range input {
+		for x := range signalInput {
+			alpha := <-alphaInput
 			y := lastY + alpha * (x - lastY)
-			output <- y
+			signalOutput <- y
 			
 			lastY = y
 		}
 	}()
 	
-	return output
-}
-
-func (ctx Context) LowPassM(input chan float64, alphaModulation chan float64) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
-	
-	go func() {
-		defer close(output)
-		
-		lastY := <-input
-		output <- lastY
-		
-		for x := range input {
-			alpha := <-alphaModulation
-			y := lastY + alpha * (x - lastY)
-			output <- y
-			
-			lastY = y
-		}
-	}()
-	
-	return output
+	return signalOutput
 }
