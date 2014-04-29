@@ -86,7 +86,7 @@ func (ctx Context) RandomNoise(seed int64) (output chan float64) {
 	
 	go func() {
 		for {
-			output <- r.Float64()
+			output <- r.Float64() * 2.0 - 1.0
 		}
 	}()
 	
