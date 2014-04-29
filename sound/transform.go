@@ -60,10 +60,21 @@ func (ctx Context) ModulateFrequency(input chan float64, ratio float64) (output 
 	return output
 }
 
-func (ctx Context) TakeDuration(input chan float64, duration time.Duration) (output chan float64) {
-	return ctx.Take(input, uint((float64(duration) / float64(time.Second)) * ctx.SampleRate))
+func (ctx Context) SplitAtDuration(input chan float64, duration time.Duration, waitForZC bool) (beforeOutput, afterOutput chan float64) {
+	count := uint(ctx.SampleRate * float64(duration) / float64(time.Second))
+	return ctx.SplitAt(input, count, waitForZC)
 }
 
-func (ctx Context) TakeDurationZC(input chan float64, duration time.Duration) (output chan float64) {
-	return ctx.TakeZC(input, uint((float64(duration) / float64(time.Second)) * ctx.SampleRate))
+func (ctx Context) TakeDuration(input chan float64, duration time.Duration, waitForZC bool) (output chan float64) {
+	count := uint(ctx.SampleRate * float64(duration) / float64(time.Second))
+	return ctx.Take(input, count, waitForZC)
+}
+
+func (ctx Context) DropDuration(input chan float64, duration time.Duration, waitForZC bool) (output chan float64) {
+	count := uint(ctx.SampleRate * float64(duration) / float64(time.Second))
+	return ctx.Drop(input, count, waitForZC)
+}
+
+func (ctx Context) Duration(input chan float64) (duration time.Duration) {
+	return time.Duration(float64(time.Second) * float64(ctx.Count(input)) / ctx.SampleRate)
 }

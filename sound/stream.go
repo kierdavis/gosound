@@ -135,58 +135,59 @@ func (ctx Context) Negate(input chan float64, f MapFunc) (output chan float64) {
 	})
 }
 
-func (ctx Context) Take(input chan float64, count uint) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
+func (ctx Context) SplitAt(input chan float64, count uint, waitForZC bool) (beforeOutput, afterOutput chan float64) {
+	beforeOutput = make(chan float64, ctx.StreamBufferSize)
+	afterOutput = make(chan float64, ctx.StreamBufferSize)
 	
 	go func() {
-		defer close(output)
-		
 		var x float64
 		
-		for x = range input {
-			if count == 0 {
-				break
+		if count > 0 {
+			for x = range input {
+				beforeOutput <- x
+				
+				count--
+				if count == 0 {
+					break
+				}
 			}
-			count--
-			
-			output <- x
 		}
+		
+		if waitForZC {
+			if x > 0 {
+				for x > 0 {
+					x = <-input
+					beforeOutput <- x
+				}
+			} else if x < 0 {
+				for x < 0 {
+					x = <-input
+					beforeOutput <- x
+				}
+			}
+		}
+		
+		close(beforeOutput)
+		
+		for x = range input {
+			afterOutput <- x
+		}
+		
+		close(afterOutput)
 	}()
 	
-	return output
+	return beforeOutput, afterOutput
 }
 
-func (ctx Context) TakeZC(input chan float64, count uint) (output chan float64) {
-	output = make(chan float64, ctx.StreamBufferSize)
-	
-	go func() {
-		defer close(output)
-		
-		var x float64
-		
-		for x = range input {
-			if count == 0 {
-				break
-			}
-			count--
-			
-			output <- x
-		}
-		
-		if x > 0 {
-			for x > 0 {
-				x = <-input
-				output <- x
-			}
-		} else if x < 0 {
-			for x < 0 {
-				x = <-input
-				output <- x
-			}
-		}
-	}()
-	
-	return output
+func (ctx Context) Take(input chan float64, count uint, waitForZC bool) (output chan float64) {
+	beforeOutput, _ := ctx.SplitAt(input, count, waitForZC)
+	return beforeOutput
+}
+
+func (ctx Context) Drop(input chan float64, count uint, waitForZC bool) (output chan float64) {
+	beforeOutput, afterOutput := ctx.SplitAt(input, count, waitForZC)
+	ctx.Drain(beforeOutput)
+	return afterOutput
 }
 
 func (ctx Context) Append(inputs... chan float64) (output chan float64) {
@@ -226,6 +227,16 @@ func (ctx Context) Fork(input chan float64, numOutputs uint) (outputs []chan flo
 	return outputs
 }
 
+func (ctx Context) Fork2(input chan float64) (output1, output2 chan float64) {
+	forks := ctx.Fork(input, 2)
+	return forks[0], forks[1]
+}
+
+func (ctx Context) Fork3(input chan float64) (output1, output2, output3 chan float64) {
+	forks := ctx.Fork(input, 3)
+	return forks[0], forks[1], forks[2]
+}
+
 func (ctx Context) Buffer(input chan float64) (buffer []float64) {
 	buffer = make([]float64, 0, ctx.StreamBufferSize)
 	
@@ -234,4 +245,12 @@ func (ctx Context) Buffer(input chan float64) (buffer []float64) {
 	}
 	
 	return buffer
+}
+
+func (ctx Context) Count(input chan float64) (n uint) {
+	for _ = range input {
+		n++
+	}
+	
+	return n
 }
