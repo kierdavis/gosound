@@ -154,9 +154,6 @@ func (so SndFileOutput) Write(sampleRate float64, channels []chan float64) (err 
 			x, ok := <-channels[chNum]
 			if !ok {
 				channelsClosed |= 1 << uint(chNum)
-				if channelsClosed == channelsClosedMax {
-					break
-				}
 			}
 			
 			buffer[i] = x
