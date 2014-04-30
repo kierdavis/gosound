@@ -11,11 +11,11 @@ func (ctx Context) Saw(frequencyInput chan float64) (signalOutput chan float64) 
 	go func() {
 		defer close(signalOutput)
 		
-		x := 0.0
+		x := 0.5
 		
 		for frequency := range frequencyInput {
 			signalOutput <- (x * 2.0) - 1.0
-			_, x = math.Modf(x + (frequency / ctx.SampleRate))
+			x = math.Mod(x + (frequency / ctx.SampleRate), 1.0)
 		}
 	}()
 	

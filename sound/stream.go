@@ -155,15 +155,20 @@ func (ctx Context) SplitAt(input chan float64, count uint, waitForZC bool) (befo
 		
 		if waitForZC {
 			if x > 0 {
+				x = <-input
 				for x > 0 {
-					x = <-input
 					beforeOutput <- x
+					x = <-input
 				}
+				afterOutput <- x
+			
 			} else if x < 0 {
+				x = <-input
 				for x < 0 {
-					x = <-input
 					beforeOutput <- x
+					x = <-input
 				}
+				afterOutput <- x
 			}
 		}
 		
