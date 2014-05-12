@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func play(ctx sound.Context, freqInput chan float64) (stream chan float64) {
+func playMelodySynth(ctx sound.Context, freqInput chan float64) (stream chan float64) {
 	freqInput1, freqInput2 := ctx.Fork2(freqInput)
 
 	return ctx.Add(
@@ -30,6 +30,15 @@ func play(ctx sound.Context, freqInput chan float64) (stream chan float64) {
 			),
 			ctx.Const(0.25),
 		),
+	)
+}
+
+func playBassSynth(ctx sound.Context, freqInput chan float64) (stream chan float64) {
+	//freqInput1, freqInput2 := ctx.Fork2(freqInput)
+
+	return ctx.Square(
+		freqInput,
+		ctx.Const(0.8),
 	)
 }
 
@@ -133,7 +142,24 @@ func genBassArpeggio(ctx sound.Context, scale music.Scale, n int) (stream chan f
 			)
 
 			parts = append(parts, part)
-
+		
+		} else if rand.Float64() < 0.05 {
+			part1 := ctx.TakeDuration(
+				ctx.Const(note.Frequency()),
+				time.Second/8,
+				false,
+			)
+			
+			part2 := ctx.TakeDuration(
+				ctx.Const(note.Frequency()),
+				time.Second/8,
+				false,
+			)
+			
+			parts = append(parts, part1)
+			parts = append(parts, ctx.TakeDuration(ctx.Silence(), time.Second/8, false))
+			parts = append(parts, part2)
+		
 		} else {
 			part := ctx.TakeDuration(
 				ctx.Const(note.Frequency()),
@@ -190,7 +216,9 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 		for {
 			var octave int
 			x := rand.Float64()
-			if x < 0.3 {
+			if x < 0.2 {
+				octave = 1
+			} else if x < 0.8 {
 				octave = 2
 			} else {
 				octave = 3
@@ -217,8 +245,8 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 		}
 	}()
 
-	melody := play(ctx, ctx.AppendStream(melodyParts))
-	bass := play(ctx, ctx.AppendStream(bassParts))
+	melody := playMelodySynth(ctx, ctx.AppendStream(melodyParts))
+	bass := playBassSynth(ctx, ctx.AppendStream(bassParts))
 
 	melodyLeft, melodyRight := ctx.Fork2(melody)
 	bassLeft, bassRight := ctx.Fork2(bass)
