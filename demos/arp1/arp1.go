@@ -4,7 +4,7 @@
 //   * Navigate to the 'tools' subdirectory.
 //   * Run './rungosounddemo.sh arp1'. If you have a multi-core processor, add
 //     ' -threads N' to the end of the command where N is the number of cores.
-package arp
+package arp1
 
 import (
 	"github.com/kierdavis/gosound/music"
