@@ -2,7 +2,7 @@ package soundio
 
 type SoundInput interface {
 	// Read multichannel sample data from an input, returning the sample rate.
-	Read() (float64, []chan float64, chan error) 
+	Read() (float64, []chan float64, chan error)
 }
 
 type SoundOutput interface {

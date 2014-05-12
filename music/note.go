@@ -20,7 +20,7 @@ const (
 	A
 	ASharp
 	B
-	
+
 	DFlat = CSharp
 	EFlat = DSharp
 	GFlat = FSharp
@@ -55,14 +55,14 @@ func (letter NoteLetter) String() string {
 	case B:
 		return "B"
 	}
-	
+
 	return ""
 }
 
 type Note int
 
 func MakeNote(letter NoteLetter, octave int) (note Note) {
-	return Note(octave * 12) + Note(letter)
+	return Note(octave*12) + Note(letter)
 }
 
 func (note Note) Add(semitones int) (newNote Note) {
@@ -89,7 +89,7 @@ func (note Note) Frequency() (freq float64) {
 
 func FromFrequency(freq float64) (note Note) {
 	octaves := math.Log2(freq / 440.0)
-	semitones := int(math.Floor(octaves * 12.0 + 0.5))
+	semitones := int(math.Floor(octaves*12.0 + 0.5))
 	return MakeNote(A, 4).Add(semitones)
 }
 

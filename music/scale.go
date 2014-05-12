@@ -1,15 +1,15 @@
 package music
 
 var (
-	Major = []int{2, 2, 1, 2, 2, 2, 1}
-	Minor = []int{2, 1, 2, 2, 1, 2, 2}
+	Major         = []int{2, 2, 1, 2, 2, 2, 1}
+	Minor         = []int{2, 1, 2, 2, 1, 2, 2}
 	HarmonicMinor = []int{2, 1, 2, 2, 1, 3, 1}
-	MelodicMinor = []int{2, 1, 2, 2, 2, 2, 1}
+	MelodicMinor  = []int{2, 1, 2, 2, 2, 2, 1}
 )
 
 type Scale struct {
-	Root Note
-	Intervals []int
+	Root            Note
+	Intervals       []int
 	CurrentInterval int
 }
 
