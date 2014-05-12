@@ -34,11 +34,13 @@ func playMelodySynth(ctx sound.Context, freqInput chan float64) (stream chan flo
 }
 
 func playBassSynth(ctx sound.Context, freqInput chan float64) (stream chan float64) {
-	//freqInput1, freqInput2 := ctx.Fork2(freqInput)
-
-	return ctx.Square(
-		freqInput,
-		ctx.Const(0.8),
+	return ctx.Add(
+		ctx.Mul(
+			ctx.Square(
+				freqInput,
+				ctx.Const(0.8),
+			),
+		),
 	)
 }
 
@@ -95,7 +97,7 @@ func genMelodyArpeggio(ctx sound.Context, scale music.Scale, n int) (stream chan
 	root := scale.Root
 
 	for i := 0; i < n; i++ {
-		if i+1 < n && rand.Float64() < 0.03 {
+		if i+1 < n && rand.Float64() < 0.01 {
 			from := scale.Root
 			nextNote(&scale, root)
 			to := scale.Root
@@ -197,15 +199,15 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 			var n int
 			x = rand.Float64()
 			if x < 0.2 {
-				n = 2
+				n = 3
 			} else if x < 0.4 {
-				n = 4
+				n = 6
 			} else if x < 0.6 {
-				n = 8
-			} else if x < 0.8 {
 				n = 12
+			} else if x < 0.8 {
+				n = 18
 			} else {
-				n = 16
+				n = 24
 			}
 
 			melodyParts <- genMelodyArpeggio(ctx, scale, n)
@@ -216,12 +218,10 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 		for {
 			var octave int
 			x := rand.Float64()
-			if x < 0.2 {
-				octave = 1
-			} else if x < 0.8 {
-				octave = 2
-			} else {
+			if x < 0.3 {
 				octave = 3
+			} else {
+				octave = 2
 			}
 
 			root := music.MakeNote(music.D, octave)
@@ -230,15 +230,15 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 			var n int
 			x = rand.Float64()
 			if x < 0.2 {
-				n = 1
+				n = 3
 			} else if x < 0.4 {
-				n = 2
-			} else if x < 0.6 {
-				n = 4
-			} else if x < 0.8 {
 				n = 6
+			} else if x < 0.6 {
+				n = 9
+			} else if x < 0.8 {
+				n = 12
 			} else {
-				n = 8
+				n = 18
 			}
 
 			bassParts <- genBassArpeggio(ctx, scale, n)
@@ -256,7 +256,7 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 			ctx.Mul(melodyLeft, ctx.Const(0.4)),
 			ctx.Mul(bassLeft, ctx.Const(0.6)),
 		),
-		time.Second*60,
+		time.Second*300,
 		true,
 	)
 
@@ -265,7 +265,7 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 			ctx.Mul(melodyRight, ctx.Const(0.6)),
 			ctx.Mul(bassRight, ctx.Const(0.4)),
 		),
-		time.Second*60,
+		time.Second*300,
 		true,
 	)
 

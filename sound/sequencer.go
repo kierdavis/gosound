@@ -50,24 +50,34 @@ func (seq *Sequencer) Play() (stream chan float64) {
 		seq.Lock()
 		sort.Sort(durationSlice(seq.offsets))
 		
-		mix := seq.Ctx.Silence()
-		pos := time.Duration(0)
-		
 		var chunk chan float64
+		
+		mix := seq.Ctx.Closed()
+		pos := time.Duration(0)
 		
 		for _, offset := range seq.offsets {
 			// Emit samples until we reach the point at which the next part will
 			// be added.
-			chunk, mix = seq.Ctx.SplitAtDuration(mix, offset - pos, false)
+			chunkDuration := offset - pos
+			chunk, mix = seq.Ctx.SplitAtDuration(mix, chunkDuration, false)
+			chunk = seq.Ctx.PadDuration(chunk, chunkDuration)
+			
 			seq.Unlock()
 			chunkChan <- chunk
 			seq.Lock()
 			
 			// Mix these parts into the stream.
 			parts := seq.parts[offset]
-			parts = append(parts, mix)
+			if mix != nil {
+				parts = append(parts, mix)
+			}
 			mix = seq.Ctx.Add(parts...)
+			
+			pos += chunkDuration
 		}
+		
+		// We've played all the scheduled parts, just let them sustain infinitely.
+		chunkChan <- mix
 	}()
 	
 	return stream

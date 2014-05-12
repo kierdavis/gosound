@@ -75,6 +75,11 @@ func (ctx Context) DropDuration(input chan float64, duration time.Duration, wait
 	return ctx.Drop(input, count, waitForZC)
 }
 
+func (ctx Context) PadDuration(input chan float64, duration time.Duration) (output chan float64) {
+	count := uint(ctx.SampleRate * float64(duration) / float64(time.Second))
+	return ctx.Pad(input, count)
+}
+
 func (ctx Context) Duration(input chan float64) (duration time.Duration) {
 	return time.Duration(float64(time.Second) * float64(ctx.Count(input)) / ctx.SampleRate)
 }

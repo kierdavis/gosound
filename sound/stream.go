@@ -208,6 +208,26 @@ func (ctx Context) Drop(input chan float64, count uint, waitForZC bool) (output 
 	return afterOutput
 }
 
+func (ctx Context) Pad(input chan float64, count uint) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	go func() {
+		defer close(output)
+		
+		for x := range input {
+			output <- x
+			count--
+		}
+		
+		for count > 0 {
+			output <- 0.0
+			count--
+		}
+	}()
+	
+	return output
+}
+
 // Append concatenates a number of finite streams.
 func (ctx Context) Append(inputs ...chan float64) (output chan float64) {
 	output = make(chan float64, ctx.StreamBufferSize)
@@ -313,4 +333,10 @@ func (ctx Context) Count(input chan float64) (n uint) {
 	}
 
 	return n
+}
+
+func (ctx Context) Closed() (stream chan float64) {
+	stream = make(chan float64)
+	close(stream)
+	return stream
 }
