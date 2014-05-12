@@ -100,4 +100,5 @@ echo go build "$name.go"
 go build "$name.go"
 
 cd "$currdir"
+echo .../$name "$@"
 $tempdir/$name "$@"
