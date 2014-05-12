@@ -1,6 +1,7 @@
 package sndfileio
 
 import (
+	"github.com/kierdavis/gosound/soundio"
 	"github.com/mkb218/gosndfile/sndfile"
 )
 
@@ -143,23 +144,8 @@ func (so SndFileOutput) Write(sampleRate float64, channels []chan float64) (err 
 	}
 	defer f.Close()
 
-	buffer := make([]float64, len(channels)*so.BufferSize)
-
-	var channelsClosed uint
-	channelsClosedMax := (uint(1) << uint(len(channels))) - 1
-
-	for channelsClosed != channelsClosedMax {
-		for i, _ := range buffer {
-			chNum := i % len(channels)
-			x, ok := <-channels[chNum]
-			if !ok {
-				channelsClosed |= 1 << uint(chNum)
-			}
-
-			buffer[i] = x
-		}
-
-		_, err := f.WriteItems(buffer)
+	for buffer := range soundio.Interlace(channels, so.BufferSize) {
+		_, err = f.WriteItems(buffer)
 		if err != nil {
 			return err
 		}
