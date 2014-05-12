@@ -2,9 +2,8 @@
 // To install:
 //   * Clone this repo.
 //   * Navigate to the 'tools' subdirectory.
-//   * Run './rungosounddemo.sh arp'. If you have a multi-core processor, add
+//   * Run './rungosounddemo.sh arp1'. If you have a multi-core processor, add
 //     ' -threads N' to the end of the command where N is the number of cores.
-//   * 'aplay arp.wav', 'vlc arp.wav', etc.
 package arp
 
 import (
