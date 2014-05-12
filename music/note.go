@@ -1,6 +1,7 @@
 package music
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -90,4 +91,8 @@ func FromFrequency(freq float64) (note Note) {
 	octaves := math.Log2(freq / 440.0)
 	semitones := int(math.Floor(octaves * 12.0 + 0.5))
 	return MakeNote(A, 4).Add(semitones)
+}
+
+func (note Note) String() string {
+	return fmt.Sprintf("%s%d", note.Letter().String(), note.Octave())
 }
