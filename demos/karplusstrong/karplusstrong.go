@@ -5,20 +5,17 @@ import (
 	"time"
 )
 
-// input should be finite and prefarably short (e.g. one cycle of a triangle wave)
+// input should be finite and preferably short (e.g. one cycle of a triangle wave)
 func KarplusStrong(ctx sound.Context, input chan float64) (output chan float64) {
 	partChan := make(chan chan float64)
 	output = ctx.AppendStream(partChan)
 
 	go func() {
+		buffer := ctx.ToBuffer(input)
+		
 		for {
-			input1, input2 := ctx.Fork2(input)
-
-			// Output one copy of the input
-			partChan <- input1
-
-			// Buffer the other copy to allow the first copy to drain out
-			buffer := ctx.ToBuffer(input2)
+			// Output a copy of the input
+			partChan <- ctx.FromBuffer(buffer)
 
 			// Filter the buffer
 			for i, y := range buffer {
@@ -26,9 +23,6 @@ func KarplusStrong(ctx sound.Context, input chan float64) (output chan float64) 
 				z := buffer[(i+1)%len(buffer)]
 				buffer[i] = x/3 + y/3 + z/3
 			}
-
-			// Use the filtered buffer as the input for the next round
-			input = ctx.FromBuffer(buffer)
 		}
 	}()
 

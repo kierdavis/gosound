@@ -143,7 +143,6 @@ func (ctx Context) Map(input chan float64, f MapFunc) (output chan float64) {
 // until a zero-crossing occurs. The remainder of 'input' is then copied to
 // 'afterOutput'.
 func (ctx Context) SplitAt(input chan float64, count uint, waitForZC bool) (beforeOutput, afterOutput chan float64) {
-
 	beforeOutput = make(chan float64, ctx.StreamBufferSize)
 	afterOutput = make(chan float64, ctx.StreamBufferSize)
 
@@ -197,7 +196,6 @@ func (ctx Context) SplitAt(input chan float64, count uint, waitForZC bool) (befo
 // Take returns the first 'count' values of 'input'. See SplitAt for a
 // description of the 'waitForZC' argument.
 func (ctx Context) Take(input chan float64, count uint, waitForZC bool) (output chan float64) {
-
 	beforeOutput, _ := ctx.SplitAt(input, count, waitForZC)
 	return beforeOutput
 }
@@ -205,7 +203,6 @@ func (ctx Context) Take(input chan float64, count uint, waitForZC bool) (output 
 // Drop returns all but the first 'count' values of 'input'. See SplitAt for a
 // description of the 'waitForZC' argument.
 func (ctx Context) Drop(input chan float64, count uint, waitForZC bool) (output chan float64) {
-
 	beforeOutput, afterOutput := ctx.SplitAt(input, count, waitForZC)
 	ctx.Drain(beforeOutput)
 	return afterOutput
