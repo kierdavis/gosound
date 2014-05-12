@@ -211,6 +211,22 @@ func (ctx Context) Append(inputs... chan float64) (output chan float64) {
 	return output
 }
 
+func (ctx Context) AppendStream(inputs chan chan float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	go func() {
+		defer close(output)
+		
+		for input := range inputs {
+			for x := range input {
+				output <- x
+			}
+		}
+	}()
+	
+	return output
+}
+
 func (ctx Context) Fork(input chan float64, numOutputs uint) (outputs []chan float64) {
 	outputs = make([]chan float64, numOutputs)
 	for i, _ := range outputs {
@@ -242,7 +258,7 @@ func (ctx Context) Fork3(input chan float64) (output1, output2, output3 chan flo
 	return forks[0], forks[1], forks[2]
 }
 
-func (ctx Context) Buffer(input chan float64) (buffer []float64) {
+func (ctx Context) ToBuffer(input chan float64) (buffer []float64) {
 	buffer = make([]float64, 0, ctx.StreamBufferSize)
 	
 	for x := range input {
@@ -250,6 +266,20 @@ func (ctx Context) Buffer(input chan float64) (buffer []float64) {
 	}
 	
 	return buffer
+}
+
+func (ctx Context) FromBuffer(buffer []float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	go func() {
+		defer close(output)
+		
+		for _, x := range buffer {
+			output <- x
+		}
+	}()
+	
+	return output
 }
 
 func (ctx Context) Count(input chan float64) (n uint) {
