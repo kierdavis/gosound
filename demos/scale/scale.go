@@ -1,5 +1,6 @@
 // A simple C major scale played on a sine oscillator.
-// One sine oscillator is used, with its frequency modulated through each of the notes.
+// A single call to 'Sine' is used, with its frequency modulated through each of
+// the notes.
 package scale
 
 import (
@@ -38,7 +39,7 @@ func FrequencyEnvelope(ctx sound.Context) (stream chan float64) {
 
 func Generate(ctx sound.Context) (left, right chan float64) {
 	stream := ctx.TakeDuration(
-		ctx.Mul0(
+		ctx.Mul(
 			ctx.Sine(
 				FrequencyEnvelope(ctx),
 			),
