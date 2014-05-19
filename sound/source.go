@@ -123,3 +123,46 @@ func (ctx Context) RandomNoise(seed int64) (output chan float64) {
 
 	return output
 }
+
+func (ctx Context) perlinSmooth(input chan float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+	
+	go func() {
+		x := <-input
+		y := <-input
+		output <- x
+		
+		for z := range input {
+			output <- x/4 + y/2 + z/4
+			x, y = y, z
+		}
+	}()
+	
+	return output
+}
+
+func (ctx Context) PerlinNoise(seed int64, baseFrequency, persistence float64, numOctaves int) (output chan float64) {
+	// Number of samples between changes of most frequently changing layer
+	//baseFrequencyFactor := ctx.SampleRate / baseFrequency
+	
+	maxAmpl := 0.0
+	ampl := 1.0
+	for i := 0; i < numOctaves; i++ {
+		maxAmpl += ampl
+		ampl *= persistence
+	}
+	
+	ampl = 1.0 / maxAmpl
+	octaves := make([]chan float64, numOctaves)
+	for i := 0; i < numOctaves; i++ {
+		freq := math.Pow(2.0, float64(i-numOctaves+1)) * baseFrequency
+		octave := ctx.RandomNoise(seed + int64(i))
+		octave = ctx.perlinSmooth(octave)
+		octave = ctx.ModulateFrequency(octave, freq / ctx.SampleRate)
+		octave = ctx.Mul(octave, ctx.Const(ampl))
+		octaves[i] = octave
+		ampl *= persistence
+	}
+	
+	return ctx.Add(octaves...)
+}
