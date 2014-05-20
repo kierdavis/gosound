@@ -11,7 +11,7 @@ import (
 // the previous input sample in a[1] and so on. The coefficient of the previous
 // output sample should be placed in b[0], that of the output sample before that
 // in b[1] and so on.
-func RecursiveFilter(ctx sound.Context, input chan float64, as, bs []float64) (output chan float64) {
+func Recursive(ctx sound.Context, input chan float64, as, bs []float64) (output chan float64) {
     output = make(chan float64, ctx.StreamBufferSize)
     
     go func() {

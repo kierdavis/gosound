@@ -266,19 +266,24 @@ func (ctx Context) AppendStream(inputs chan chan float64) (output chan float64) 
 // streams. Note that every output channel must be read from; Drain can be used
 // on those that are not used.
 func (ctx Context) Fork(input chan float64, numOutputs uint) (outputs []chan float64) {
+	// Create two copies to allow the user to mutate the returned array without
+	// affecting which channels are sent to within this routine.
 	outputs = make([]chan float64, numOutputs)
+	outputsCopy := make([]chan float64, numOutputs)
 	for i, _ := range outputs {
-		outputs[i] = make(chan float64, ctx.StreamBufferSize)
+		ch := make(chan float64, ctx.StreamBufferSize)
+		outputs[i] = ch
+		outputsCopy[i] = ch
 	}
 
 	go func() {
 		for x := range input {
-			for _, output := range outputs {
+			for _, output := range outputsCopy {
 				output <- x
 			}
 		}
 
-		for _, output := range outputs {
+		for _, output := range outputsCopy {
 			close(output)
 		}
 	}()

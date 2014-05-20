@@ -7,7 +7,7 @@ __kernel void compute_cell(
 	__global float *reals,
 	__global float *imags,
 	const unsigned int log_input_size,
-	const unsigned int count,
+	const unsigned int count
 ) {
 	unsigned int i = get_global_id(0);
 	if (i < count) {
@@ -25,7 +25,7 @@ __kernel void partial_sum(
 	__global float *reals,
 	__global float *imags,
 	const unsigned int round,
-	count unsigned int count,
+	const unsigned int count
 ) {
 	unsigned int i = get_global_id(0);
 	if (i < count) {
@@ -41,7 +41,7 @@ __kernel void average(
 	__global float *imags,
 	__global float *output,
 	const unsigned int log_input_size,
-	const unsigned int count,
+	const unsigned int count
 ) {
 	unsigned int i = get_global_id(0);
 	if (i < count) {
