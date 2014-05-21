@@ -107,6 +107,8 @@ func ChebyshevCoefficients(ctx sound.Context, filterType FilterType, cutoffFreq,
 		as[i] = as[i+2]
 		bs[i] = -bs[i+2]
 	}
+	as = as[:n]
+	bs = bs[:n]
 	
 	// Normalise the gain
 	sa := 0.0
@@ -133,5 +135,24 @@ func ChebyshevCoefficients(ctx sound.Context, filterType FilterType, cutoffFreq,
 		as[i] /= gain
 	}
 	
-	return as, bs[1:]
+	// Trim trailing zeroes.
+	for i := n-1; i >= 0; i-- {
+		if as[i] == 0.0 {
+			as = as[:i]
+		} else {
+			break
+		}
+	}
+	for i := n-1; i >= 0; i-- {
+		if bs[i] == 0.0 {
+			bs = bs[:i]
+		} else {
+			break
+		}
+	}
+	
+	// Trim the unused b0 coefficient.
+	bs = bs[1:]
+	
+	return as, bs
 }
