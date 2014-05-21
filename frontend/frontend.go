@@ -1,26 +1,11 @@
-#!/bin/sh
-
-name="$1"
-shift # Remove the first argument from $@
-
-pkg="github.com/kierdavis/gosound/demos/$name"
-
-echo go get "$pkg" "github.com/kierdavis/gosound/soundio/alsaio" "github.com/kierdavis/gosound/soundio/sndfileio"
-go get "$pkg" "github.com/kierdavis/gosound/soundio/alsaio" "github.com/kierdavis/gosound/soundio/sndfileio" || exit 1
-
-tempdir="/tmp/gosound-demo/$name"
-
-currdir=`pwd`
-mkdir -p "$tempdir" || exit 1
-cd "$tempdir"
-
-cat > "$name.go" <<EOF
-package main
+// Package frontend provides a function Main() that deals with handling the
+// command line and writing output, so all you have to worry about is
+// generating audio streams.
+package frontend
 
 import (
     "flag"
     "fmt"
-    "$pkg"
     "github.com/kierdavis/gosound/sound"
     "github.com/kierdavis/gosound/soundio"
     "github.com/kierdavis/gosound/soundio/alsaio"
@@ -76,16 +61,18 @@ func getOutput(ctx sound.Context) (so soundio.SoundOutput) {
     }
 }
 
-func main() {
+func Main(ctx sound.Context, channels... chan float64) {
     flag.Parse()
-    
     runtime.GOMAXPROCS(NumThreads)
     
-    ctx := sound.DefaultContext
-    left, right := $name.Generate(ctx)
+    // Make a copy of the argument array before we modify it.
+    channels2 := make([]chan float64, len(channels))
+    copy(channels2, channels)
+    channels = channels2
     
-    // Measure the duration of the left channel
-    left, durationStream := ctx.Fork2(left)
+    // Measure the duration of the first channel
+    var durationStream chan float64
+    channels[0], durationStream = ctx.Fork2(channels[0])
     durationChan := make(chan time.Duration, 1)
     go func() {
         durationChan <- ctx.Duration(durationStream)
@@ -93,8 +80,9 @@ func main() {
     
     so := getOutput(ctx)
     
+    // Write the output
     startTime := time.Now()
-    err := so.Write(ctx.SampleRate, []chan float64{left, right})
+    err := so.Write(ctx.SampleRate, channels)
     endTime := time.Now()
     
     if err != nil {
@@ -105,11 +93,3 @@ func main() {
     realSecs := float64(endTime.Sub(startTime)) / float64(time.Second)
     fmt.Printf("Generated %.3f seconds of audio in %.3f seconds (ratio %.3f).\n", outSecs, realSecs, outSecs/realSecs)
 }
-EOF
-
-echo go build "$name.go"
-go build "$name.go" || exit 1
-
-cd "$currdir"
-echo .../$name "$@"
-$tempdir/$name "$@" || exit 1

@@ -1,6 +1,7 @@
-package karplusstrong
+package main
 
 import (
+	"github.com/kierdavis/gosound/frontend"
 	"github.com/kierdavis/gosound/sound"
 	"time"
 )
@@ -62,4 +63,10 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 		false,
 	)
 	return ctx.Fork2(stream)
+}
+
+func main() {
+	ctx := sound.DefaultContext
+	left, right := Generate(ctx)
+	frontend.Main(ctx, left, right)
 }

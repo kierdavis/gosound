@@ -4,9 +4,10 @@
 //   * Navigate to the 'tools' subdirectory.
 //   * Run './rungosounddemo.sh arp1'. If you have a multi-core processor, add
 //     ' -threads N' to the end of the command where N is the number of cores.
-package arp1
+package main
 
 import (
+	"github.com/kierdavis/gosound/frontend"
 	"github.com/kierdavis/gosound/music"
 	"github.com/kierdavis/gosound/sound"
 	"math/rand"
@@ -270,4 +271,10 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 	)
 
 	return left, right
+}
+
+func main() {
+	ctx := sound.DefaultContext
+	left, right := Generate(ctx)
+	frontend.Main(ctx, left, right)
 }

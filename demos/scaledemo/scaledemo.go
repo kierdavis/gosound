@@ -1,9 +1,10 @@
 // A simple C major scale played on a sine oscillator.
 // A single call to 'Sine' is used, with its frequency modulated through each of
 // the notes.
-package scale
+package main
 
 import (
+	"github.com/kierdavis/gosound/frontend"
 	"github.com/kierdavis/gosound/music"
 	"github.com/kierdavis/gosound/sound"
 	"time"
@@ -49,4 +50,10 @@ func Generate(ctx sound.Context) (left, right chan float64) {
 		true, // Wait for a zero crossing
 	)
 	return ctx.Fork2(stream)
+}
+
+func main() {
+	ctx := sound.DefaultContext
+	left, right := Generate(ctx)
+	frontend.Main(ctx, left, right)
 }
