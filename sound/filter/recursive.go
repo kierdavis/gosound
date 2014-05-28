@@ -6,18 +6,13 @@ import (
 
 // Run a recursive filter using input coefficients 'as' and past output
 // coefficients 'bs'.
-// 
-// The coefficient of the current input sample should be placed in a[0], that of
-// the previous input sample in a[1] and so on. The coefficient of the previous
-// output sample should be placed in b[0], that of the output sample before that
-// in b[1] and so on.
-func Recursive(ctx sound.Context, input chan float64, as, bs []float64) (output chan float64) {
+func Recursive(ctx sound.Context, input chan float64, as, bs []chan float64) (output chan float64) {
     output = make(chan float64, ctx.StreamBufferSize)
     
     go func() {
         defer close(output)
         
-        a0 := 0.0
+        a0 := ctx.Const(0.0)
         if len(as) >= 1 {
             a0 = as[0]
             as = as[1:]
@@ -29,14 +24,14 @@ func Recursive(ctx sound.Context, input chan float64, as, bs []float64) (output 
         prevOutputPtr := 0 // points to most recently added prevOutput
         
         for x := range input {
-            y := a0 * x
+            y := (<-a0) * x
             
             for i, a := range as {
-                y += a * prevInputs[(prevInputPtr - i + len(prevInputs)) % len(prevInputs)]
+                y += (<-a) * prevInputs[(prevInputPtr - i + len(prevInputs)) % len(prevInputs)]
             }
             
             for i, b := range bs {
-                y += b * prevOutputs[(prevOutputPtr - i + len(prevOutputs)) % len(prevOutputs)]
+                y += (<-b) * prevOutputs[(prevOutputPtr - i + len(prevOutputs)) % len(prevOutputs)]
             }
             
             output <- y
