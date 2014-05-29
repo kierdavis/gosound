@@ -138,6 +138,34 @@ func (ctx Context) Map(input chan float64, f MapFunc) (output chan float64) {
 	return output
 }
 
+func (ctx Context) Negate(input chan float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+
+	go func() {
+		defer close(output)
+
+		for x := range input {
+			output <- -x
+		}
+	}()
+
+	return output
+}
+
+func (ctx Context) Negate1(input chan float64) (output chan float64) {
+	output = make(chan float64, ctx.StreamBufferSize)
+
+	go func() {
+		defer close(output)
+
+		for x := range input {
+			output <- 1 - x
+		}
+	}()
+
+	return output
+}
+
 // SplitAt sends the first 'count' values received from 'input' to
 // 'beforeOutput'. If 'waitForZC' is true, SplitAt will continue to copy values
 // until a zero-crossing occurs. The remainder of 'input' is then copied to
